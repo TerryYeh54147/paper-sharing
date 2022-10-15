@@ -81,10 +81,15 @@ $$
 
 ![algorithm1](algorithm%201.png)
 
+algorithm 1是先使用所有資料與label訓練出原模型，然後座一個 $T^{i}_{tr}$ 的訓練範例和標籤去訓練每個檢測模型 $\hat f_i$。此外，當判斷錯或sureness大於等於邊界值，則會把資料再帶回去訓練。
+
 ### C. 一種適用於CDDBS的飄移檢測和辨識演算法
 
 ![algorithm2](algorithm%202.png)
 
+通過algorithm 2，如果 $\hat f_i$ 檢測到偏移，我們可獲得一組 $C_dri$ 的類別。仔細來說，可以先從每個檢測模型 $\hat f_i$ 中獲得一組分類分數，利用每個類別去計算KL散度，以獲得分類分數與其在同一組ref的參考值進行比較，這些參考值是預先用非飄移範例獲得的。然後如果KL散大於 threshold $\alpha$ 的話，則將該類加入 $C_dri$，最後 $C_dri$ 作為結果。
+
+而通過algorithm 2得到結果就是標移的結果，其同時提供檢測與識別結果。該算法只是適用於CDDBS的其中一個範例，其他的方法也適用於CDDBS。
 
 ## References
 
