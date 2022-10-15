@@ -7,6 +7,9 @@
   - [Introduction](#introduction)
   - [Related Work](#related-work)
   - [Methods](#methods)
+    - [A. CDDBS與其飄移檢測機制](#a-cddbs與其飄移檢測機制)
+    - [B. 一種訓練CDDBS中檢查器模型所特別設計的方法](#b-一種訓練cddbs中檢查器模型所特別設計的方法)
+    - [C. 一種適用於CDDBS的飄移檢測和辨識演算法](#c-一種適用於cddbs的飄移檢測和辨識演算法)
   - [References](#references)
     - [*Can you trust your model’s uncertainty? Evaluating predictive uncertainty under dataset shift*](#can-you-trust-your-models-uncertainty-evaluating-predictive-uncertainty-under-dataset-shift)
     - [*Failing loudly: an empirical study of methods for detecting dataset shift*](#failing-loudly-an-empirical-study-of-methods-for-detecting-dataset-shift)
@@ -45,6 +48,43 @@
 > 感覺這邊只是要強調CDDBS比其他傳統的方法強而已XD
 
 ## Methods
+
+### A. CDDBS與其飄移檢測機制
+
+![CDDBS overview](CDDBS%20overview.png)
+
+當輸入一批未標記的Input之後， $f_{ori}$ 和 $\hat f_i$ 就會分別去計算分類分數。然後通過比較這些分數，CDDBS會輸出飄移檢測與辨識結果。
+
+![explain the mechanism of drift detection and identification with the inspector models used in CDDBS by using a simple binary classification problem](./explain%20by%20binary%20classification%20problem.png)
+
+*上半部是原模型，下半部是檢查器 $\hat f_0$，而 $\hat f_0$縮小了 $R_0$的決策邊界，因此在 $R_0$中發生的飄移反應靈敏*
+
+通常在非監督是的分類中，Input的class label通常是透過訓練過的模型所獲得的某些分數(e.g. confidence)來預測。當input越接近boundary的時候分數就會越低。因此通過 $\hat f_0$ 獲得的分數會隨著 $R_0$ 中發生的input 分布而敏感地變化。
+
+### B. 一種訓練CDDBS中檢查器模型所特別設計的方法
+
+![design procedure to train the inspectormodels](explain%20by%20binary%20classification%20problem.png)
+
+利用分類分數來挑選除了靠近原模型的決策邊界樣本跟錯誤樣本之外的樣本訓練檢查器模型。但因Confidence通常會被放定義為最後一層的輸出值，幾乎都會被變成0或1，並無線性關係，所以作者引入了種叫sureness的新度量，它可表示Input與邊界的距離。
+
+$$
+sur(X) := \phi(s_{1st}(X)) - \phi(s_{2nd}(X))
+$$
+
+此外，$\phi(s_{1st}(X))$, $\phi(s_{2nd}(X))$ 是所有類別中關於 X 的第一和第二高分類分數，而為了讓sureness在特徵空間中具有線性，兩個值得差比需要在任何空間中相等。
+
+作者是使用損失函數來計算這些差值。而他們發現特別是如果是使用對數函數還最小化對數損失，則關於X的損失表示維 $-\log(\eta_i(X))$，其中 $\eta_i(X)$ 是將其預測為i類的機率。而這時 $\eta_i(X)$ 就具有可加性，因此他們的差異在訓練模型的特徵空間中的任何地方都會是相等的。
+
+> note
+> 
+> 定義一個sureness的新度量出來，並且導證它的線性特徵
+
+![algorithm1](algorithm%201.png)
+
+### C. 一種適用於CDDBS的飄移檢測和辨識演算法
+
+![algorithm2](algorithm%202.png)
+
 
 ## References
 
